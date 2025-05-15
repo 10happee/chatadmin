@@ -88,8 +88,7 @@
       getDatabase,
       ref,
       onValue,
-      remove,
-      get
+      remove
     } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
     const firebaseConfig = {
@@ -149,10 +148,11 @@
       });
     }
 
-function clearMessages() {
-  remove(ref(db, "messages"));
-}
-
+    function clearMessages() {
+      remove(messagesRef).catch((error) => {
+        alert("Failed to clear messages: " + error.message);
+      });
+    }
 
     loadMessages();
   </script>
