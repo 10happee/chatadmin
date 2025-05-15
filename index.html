@@ -149,9 +149,9 @@
     }
 
     function clearMessages() {
-      remove(messagesRef).catch((error) => {
-        alert("Failed to clear messages: " + error.message);
-      });
+      remove(messagesRef)
+        .then(() => console.log("All messages cleared."))
+        .catch((error) => console.error("Error clearing messages:", error));
     }
 
     loadMessages();
