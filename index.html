@@ -28,10 +28,10 @@
       white-space: pre-wrap;
       word-wrap: break-word;
       position: relative;
-      padding: 2px 4px;
+      padding: 4px 6px;
       border-radius: 4px;
-      transition: background-color 0.2s ease;
-      border: 1px solid rgba(255,255,255,0.1);
+      background-color: #1a1a1a;
+      border: 1px solid #333;
     }
 
     .message:hover {
@@ -40,42 +40,47 @@
 
     .delete-btn {
       position: absolute;
-      right: 4px;
-      top: 4px;
-      background: red;
-      color: white;
+      right: 6px;
+      top: 6px;
+      background: #ef4444;
       border: none;
-      font-size: 0.8rem;
-      cursor: pointer;
+      color: white;
+      font-size: 0.75rem;
       border-radius: 4px;
       padding: 2px 6px;
+      cursor: pointer;
     }
 
     #clear-button {
       position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 0;
+      left: 0;
+      width: 100%;
       background-color: #3b82f6;
-      padding: 10px 20px;
-      border-radius: 6px;
-      border: none;
       color: white;
+      border: none;
+      padding: 15px;
+      font-size: 1rem;
       cursor: pointer;
-      z-index: 999;
+      border-top: 2px solid #222;
+    }
+
+    a {
+      color: #90cdf4;
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
+
   <div id="chat-box"></div>
-  <button id="clear-button" onclick="clearMessages()">Clear All</button>
+  <button id="clear-button" onclick="clearMessages()">Clear All Messages</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import {
       getDatabase,
       ref,
-      set,
       onValue,
       remove,
       get
@@ -94,44 +99,43 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const chatBox = document.getElementById("chat-box");
     const messagesRef = ref(db, "messages");
 
-    function listenForMessages() {
-      onValue(messagesRef, (snapshot) => {
-        const messages = snapshot.val();
-        chatBox.innerHTML = "";
+    const chatBox = document.getElementById("chat-box");
 
-        if (messages) {
-          const keys = Object.keys(messages).sort();
-          keys.forEach((key) => {
-            const msg = messages[key];
-            const p = document.createElement("p");
-            p.className = "message";
-            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const msgText = msg.text.replace(/(https:\/\/\S+)/g, '<a href="$1" target="_blank">$1</a>');
-            p.innerHTML = `[${time}] <strong>${msg.username || "Unknown"}</strong>: ${msgText}`;
+    function renderMessages(snapshot) {
+      const messages = snapshot.val();
+      chatBox.innerHTML = "";
 
-            const deleteBtn = document.createElement("button");
-            deleteBtn.className = "delete-btn";
-            deleteBtn.textContent = "Delete";
-            deleteBtn.onclick = () => {
-              remove(ref(db, "messages/" + key));
-            };
+      if (messages) {
+        const keys = Object.keys(messages).sort();
+        keys.forEach((key) => {
+          const msg = messages[key];
+          const p = document.createElement("p");
+          p.className = "message";
+          const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const msgText = msg.text.replace(/(https:\/\/\S+)/g, '<a href="$1" target="_blank">$1</a>');
+          p.innerHTML = `[${time}] <strong>${msg.username || "Unknown"}</strong>: ${msgText}`;
 
-            p.appendChild(deleteBtn);
-            chatBox.appendChild(p);
-          });
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "delete-btn";
+          deleteBtn.textContent = "Delete";
+          deleteBtn.onclick = () => remove(ref(db, "messages/" + key));
 
-          const spacer = document.createElement("div");
-          spacer.style.height = "60px";
-          chatBox.appendChild(spacer);
-          chatBox.scrollTop = chatBox.scrollHeight;
-        }
-      });
+          p.appendChild(deleteBtn);
+          chatBox.appendChild(p);
+        });
+
+        const spacer = document.createElement("div");
+        spacer.style.height = "80px";
+        chatBox.appendChild(spacer);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
     }
 
-    function clearMessages() {
+    onValue(messagesRef, renderMessages);
+
+    window.clearMessages = () => {
       get(messagesRef).then(snapshot => {
         const messages = snapshot.val();
         if (messages) {
@@ -140,9 +144,7 @@
           });
         }
       });
-    }
-
-    listenForMessages();
+    };
   </script>
 </body>
 </html>
